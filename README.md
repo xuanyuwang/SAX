@@ -23,6 +23,7 @@ An up-to-date Python implementation of SAX
 
 ### Code review
  - https://github.com/dolaameng/pysax. 2 years ago.
+    - Refer to the paper of year 2007: Experiencing SAX: a novel symbolic representation of time series   
  - https://github.com/nphoff/saxpy. 4 years ago.
  - https://github.com/melsabagh/sax. 3 years ago. In C++, but might be useful in the aspect of architecture.
 

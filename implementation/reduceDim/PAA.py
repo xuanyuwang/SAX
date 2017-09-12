@@ -32,4 +32,4 @@ def PAA(timeSegments):
     index = 0
     for segment in timeSegments:
         index += len(segment)
-        yield (index, sum(segment) / len(segment))
+        yield (index, sum(segment))

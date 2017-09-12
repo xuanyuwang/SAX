@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # dataFolder = parameters[0]
     # widthOfTimeSegment = parameters[1]
     # alphabetSize = parameters[2]
-    parameters = ["dataFiles", 16, 9]
+    parameters = ["dataFiles", 4, 9]
     dataFolder = parameters[0]
     widthOfTimeSegment = parameters[1]
     alphabetSize = parameters[2]
@@ -19,8 +19,7 @@ if __name__ == "__main__":
     timeSegments = getDataPointsInATimeSegment(widthOfTimeSegment, inputLines)
 
     reducedTS = PAA(timeSegments)
-    numberOfRecords = getNumberOfRecords(getPathesOfDataFiles(dataFolder))
-    symbols = symbolize(reducedTS, alphabetSize, widthOfTimeSegment, numberOfRecords)
+    symbols = symbolize(reducedTS, alphabetSize, widthOfTimeSegment, dataFolder)
     for sym in symbols:
         print(sym)
     # with open("symbols.txt", 'w') as file:

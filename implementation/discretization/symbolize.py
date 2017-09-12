@@ -2,23 +2,32 @@ import reduceDim
 import numpy as np
 import string
 from utility.readFiles import *
+from utility.readLines import *
 
-def getNumberOfRecords(dataFileTree):
+def parasForNorm(rootDataFolder):
+    allDataFilePath = getPathesOfDataFiles(rootDataFolder)
+    lines = getLinesFromDataFiles(allDataFilePath)
     numberOfRecords = 0
-    for dataFile in dataFileTree:
-        with open(dataFile, 'r') as file:
-            for line in file:
-                numberOfRecords += 1
-    return numberOfRecords
+    small = np.inf
+    big = -np.inf
+    for line in lines:
+        numberOfRecords += 1
+        value = float(line.split()[1])
+        if value < small:
+            small = value
+        if value > big:
+            big = value
+    return numberOfRecords, small, big
 
-def normalize(widthOfTimeSegment, numberOfRecords, value):
-    factor = widthOfTimeSegment / numberOfRecords
-    return (factor * value)
-
-def symbolize(reducedTS, alphabetSize, widthOfTimeSegment, numberOfRecords):
+def symbolize(reducedTS, alphabetSize, widthOfTimeSegment, rootDataFolder):
     breakPoints = getBreakPoints(alphabetSize)
+    numberOfRecords, small, big = parasForNorm(rootDataFolder)
+    small = (widthOfTimeSegment/ numberOfRecords) * small
+    big = (widthOfTimeSegment / numberOfRecords) * big
     for ts in reducedTS:
-        value = normalize(widthOfTimeSegment, numberOfRecords, ts[1])
+        value = (widthOfTimeSegment / numberOfRecords) * ts[1]
+        # normalize
+        value = (value - small) / (big - small)
         yield value
         # for i in range(alphabetSize):
         #     if value > breakPoints[i] and value <= breakPoints[i + 1]:

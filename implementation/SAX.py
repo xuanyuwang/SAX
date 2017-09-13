@@ -67,7 +67,7 @@ def genSymbol(paa, mean, std):
 if __name__ == "__main__":
     start = time.time()
 
-    dataFile = "middata"
+    dataFile = "smalldata"
     df = pd.read_csv(dataFile,header=None, dtype=np.float32, engine='c')
 
     print("Read data:", time.time() - start)

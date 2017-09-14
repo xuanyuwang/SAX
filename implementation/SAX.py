@@ -5,33 +5,32 @@ import time
 import math
 import multiprocessing
 
-windowSize = 100
-alphabetSize = 3
-
-def _reduceHelper(i, values):
-    beg = i * windowSize
-    end = (i + 1) * windowSize
-    seg = values[beg:end]
-    N = len(values)
-    seg = np.float32(np.sum(seg) * windowSize / N)
-    return seg
-
-
-def reduceDim(values):
-    print("length: ", len(values))
-    numOfSeg = int(math.ceil(len(values) / windowSize))
-    print("Number of Segments:", numOfSeg)
-    cores = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(processes=cores)
-    reducedTS = pd.Series(pool.starmap(_reduceHelper, [[i, values] for i in range(numOfSeg)]), dtype=np.float32)
-    return reducedTS
-
-def _symbolHelper(paa, table):
+def helper(piece, mean=0, std=0, pieceSize=0, N=0, lookupTable=None):
+    # Normalize
+    piece.apply(lambda x: (x - mean) / std)
+    paaValue = (np.sum(piece) * pieceSize / N)
+    # Symbolize
+    alphabetSize = len(lookupTable) - 1
     for i in range(alphabetSize):
-        if paa > table[i] and paa <= table[i + 1]:
+        if paaValue > lookupTable[i] and paaValue <= lookupTable[i + 1]:
             return string.ascii_lowercase[i]
 
-def genSymbol(paa, mean, std):
+if __name__ == "__main__":
+    start = time.time()
+
+    dataFile = "smalldata"
+    df = pd.read_csv(dataFile, header=None, dtype=np.float32, engine='c')
+
+    print("Read data:", time.time() - start)
+
+    # Parameters
+    pieceSize = 3
+    alphabetSize = 4
+    values = df[0]
+    N = len(values)
+    mean = values.mean()
+    std = values.std()
+    numOfPiece = int(math.ceil(N / pieceSize))
     breakPoints = {3: [-np.inf, -0.43, 0.43, np.inf],
                    4: [-np.inf, -0.67, 0, 0.67, np.inf],
                    5: [-np.inf, -0.84, -0.25, 0.25, 0.84, np.inf],
@@ -57,33 +56,24 @@ def genSymbol(paa, mean, std):
                         0.8, 1, 1.25, 1.62, np.inf],
                    20: [-np.inf, -1.64, -1.28, -1.04, -0.84, -0.67, -0.52, -0.39, -0.25, -0.13, 0, 0.13, 0.25, 0.39,
                         0.52, 0.67, 0.84, 1.04, 1.28, 1.64, np.inf]}
-    breakPoints = breakPoints[alphabetSize]
-    symbols = pd.Series()
+    lookupTable = breakPoints[alphabetSize]
+    print("Data length:", N)
+    print("mean:", mean)
+    print("std:", std)
+    print("Alphabet Size:", alphabetSize)
+    print("Piece Length:", pieceSize)
+    print("Number of Pieces:", numOfPiece)
+
+
+
+
     cores = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=cores)
-    symbols = pd.Series(pool.starmap(_symbolHelper, [[(value-mean)/std, breakPoints] for value in paa]))
-    return symbols
+    symbols = pd.Series(pool.starmap(helper, [[values[i * pieceSize: (i + 1) * pieceSize], mean, std, pieceSize, N, lookupTable] for i in
+                                          range(numOfPiece)]))
 
-if __name__ == "__main__":
-    start = time.time()
-
-    dataFile = "smalldata"
-    df = pd.read_csv(dataFile,header=None, dtype=np.float32, engine='c')
-
-    print("Read data:", time.time() - start)
-
-    values = df[0]
-    print("Type:", type(values))
-    print("length:", len(values))
-    mean = values.mean()
-    print("mean:", mean)
-    std = values.std()
-    print("std:", std)
-
-    reducedTS = reduceDim(values)
-    symbols = genSymbol(reducedTS, mean, std)
     # print(symbols)
     print("Symbol generated:", time.time() - start)
-    symbols.to_csv(dataFile+"Symbols", header=False)
+    symbols.to_csv(dataFile + "Symbols", header=False)
 
     print("Execution time: ", time.time() - start)

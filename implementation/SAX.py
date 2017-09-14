@@ -5,9 +5,8 @@ import time
 import math
 import multiprocessing
 
-def helper(piece, mean=0, std=0, pieceSize=0, N=0, lookupTable=None):
+def helper(piece, pieceSize=0, N=0, lookupTable=None):
     # Normalize
-    piece.apply(lambda x: (x - mean) / std)
     paaValue = (np.sum(piece) * pieceSize / N)
     # Symbolize
     alphabetSize = len(lookupTable) - 1
@@ -18,14 +17,14 @@ def helper(piece, mean=0, std=0, pieceSize=0, N=0, lookupTable=None):
 if __name__ == "__main__":
     start = time.time()
 
-    dataFile = "smalldata"
+    dataFile = "middata"
     df = pd.read_csv(dataFile, header=None, dtype=np.float32, engine='c')
 
     print("Read data:", time.time() - start)
 
     # Parameters
-    pieceSize = 3
-    alphabetSize = 4
+    pieceSize = 100
+    alphabetSize = 3
     values = df[0]
     N = len(values)
     mean = values.mean()
@@ -64,12 +63,12 @@ if __name__ == "__main__":
     print("Piece Length:", pieceSize)
     print("Number of Pieces:", numOfPiece)
 
-
-
-
+    # Normalize
+    values.apply(lambda x: (x - mean)/std)
+    # Execute PAA and symbolization
     cores = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=cores)
-    symbols = pd.Series(pool.starmap(helper, [[values[i * pieceSize: (i + 1) * pieceSize], mean, std, pieceSize, N, lookupTable] for i in
+    symbols = pd.Series(pool.starmap_async(helper, [[values[i * pieceSize: (i + 1) * pieceSize], pieceSize, N, lookupTable] for i in
                                           range(numOfPiece)]))
 
     # print(symbols)
